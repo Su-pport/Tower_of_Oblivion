@@ -66,19 +66,20 @@ public class PlayerController : MonoBehaviour
             RotationCharacter(characterRotationY);
         }
 
-
+        // w, a, s, d 키 입력에 따른 움직임
         float moveDirX = Input.GetAxisRaw("Horizontal");
         float moveDirY = Input.GetAxisRaw("Vertical");
-        // w, a, s, d 키 입력에 따른 이동 방향 계산
         if (moveDirX != 0 || moveDirY != 0)
         {
             Move(moveDirX, moveDirY);
         }
-        // shift
+
+        // shift 키 입력에 따른 달리기 상태 전환
         if (Input.GetKey(KeyCode.LeftShift))
         {
             EnterRun();
         }
+        // shift 키에서 손을 뗐을 때 달리기 상태 종료
         if (Input.GetKeyUp(KeyCode.LeftShift))
         {
             ExitRun();
@@ -86,7 +87,7 @@ public class PlayerController : MonoBehaviour
     }
 
 
-
+    // 움직임
     private void Move(float moveDirX, float moveDirY)
     {
         Vector3 moveHorizontal = transform.right * moveDirX;
@@ -97,6 +98,7 @@ public class PlayerController : MonoBehaviour
         _myRigid.MovePosition(transform.position + velocity * Time.deltaTime);
     }
 
+    // 달리기
     private void EnterRun()
     {
         UpdateRun();
@@ -115,6 +117,7 @@ public class PlayerController : MonoBehaviour
     }
 
 
+    // 카메라
     private void  RotationCamera(float cameraRotationX)
     {
         cameraRotationX *= _lookSensitivity;
