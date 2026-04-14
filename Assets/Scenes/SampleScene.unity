@@ -937,7 +937,7 @@ MonoBehaviour:
   _runSpeed: 30
   _crouchSpeed: 2
   _crawlSpeed: 1
-  _jumpForce: 3
+  _jumpForce: 10
   _theCamera: {fileID: 330585545}
   _lookSensitivity: 1
   _cameraRotationLimit: 60

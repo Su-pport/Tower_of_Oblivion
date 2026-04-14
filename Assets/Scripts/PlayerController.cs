@@ -32,6 +32,7 @@ public class PlayerController : MonoBehaviour
 
     // 컴포넌트
     private Rigidbody _myRigid;
+    private CapsuleCollider _myCapsule;
 
     // 스탯 관련 가중치 변수 (임시)
     private float tempDexSpeed = 1f;
@@ -39,7 +40,11 @@ public class PlayerController : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        // 컴포넌트 초기화
         _myRigid = GetComponent<Rigidbody>();
+        _myCapsule = GetComponent<CapsuleCollider>();
+
+        // 초기 상태 설정
         _applySpeed = _walkSpeed;
     }
 
@@ -47,6 +52,7 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         InputManage();
+        IsGrounded();
         //Move();
     }
 
@@ -84,6 +90,12 @@ public class PlayerController : MonoBehaviour
         {
             ExitRun();
         }
+
+        // 스페이스 키 입력에 따른 점프
+        if (Input.GetKey(KeyCode.Space))
+        {
+            TryJump();
+        }
     }
 
 
@@ -115,7 +127,28 @@ public class PlayerController : MonoBehaviour
         _isWalking = false;
         _applySpeed = _walkSpeed;
     }
+    
+    // 점프
+    private void TryJump()
+    {
+        if(_isGrounded)
+        {
+            Jump();
+        }
+    }
 
+    private void Jump()
+    {
+        _myRigid.linearVelocity = transform.up * _jumpForce;
+    }
+
+
+
+    // 상태 확인
+    private void IsGrounded()
+    {
+        _isGrounded = Physics.Raycast(transform.position, Vector3.down, _myCapsule.bounds.extents.y + 0.1f);
+    }
 
     // 카메라
     private void  RotationCamera(float cameraRotationX)
