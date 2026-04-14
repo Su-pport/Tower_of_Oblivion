@@ -5,11 +5,14 @@ using UnityEngineInternal;
 public class PlayerController : MonoBehaviour
 {
     // 속도 조절 변수
-    [Header("Speed Settings")]
     [SerializeField] private float _walkSpeed;   // 걷기
-    [SerializeField] private float _runSpeed;    // 달리기
-    [SerializeField] private float _crouchSpeed; // 앉기
-    [SerializeField] private float _crawlSpeed;  // 엎드리기
+    [Header("Speed Rate")]
+    [SerializeField] private float _runSpeedRate;    // 달리기
+    [SerializeField] private float _crouchSpeedRate; // 앉기
+    [SerializeField] private float _crawlSpeedRate;  // 엎드리기
+    private float _runSpeed; // 달리기 속도
+    private float _crouchSpeed; // 앉기 속도
+    private float _crawlSpeed; // 엎드리기 속도
     private float _applySpeed; // 가중치 적용 후 속도
 
     [SerializeField] private float _jumpForce; // 점프 가속도
@@ -45,6 +48,10 @@ public class PlayerController : MonoBehaviour
         _myCapsule = GetComponent<CapsuleCollider>();
 
         // 초기 상태 설정
+        _runSpeed = _walkSpeed * _runSpeedRate;
+        _crouchSpeed = _walkSpeed * _crouchSpeedRate;
+        _crawlSpeed = _walkSpeed * _crawlSpeedRate;
+
         _applySpeed = _walkSpeed;
     }
 
@@ -94,7 +101,7 @@ public class PlayerController : MonoBehaviour
         // 스페이스 키 입력에 따른 점프
         if (Input.GetKey(KeyCode.Space))
         {
-            TryJump();
+            EnterJump();
         }
     }
 
@@ -129,17 +136,18 @@ public class PlayerController : MonoBehaviour
     }
     
     // 점프
-    private void TryJump()
+    private void EnterJump()
     {
         if(_isGrounded)
         {
-            Jump();
+            UpdateJump();
         }
     }
 
-    private void Jump()
+    private void UpdateJump()
     {
         _myRigid.linearVelocity = transform.up * _jumpForce;
+
     }
 
 
