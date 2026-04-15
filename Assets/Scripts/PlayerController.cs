@@ -22,6 +22,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float _lookSensitivity; // 마우스 감도
     [SerializeField] private float _cameraRotationLimit; // 카메라 회전 제한
     private float _currentCameraRotationX = 0; // 현재 카메라 상하 회전값
+    private float _theCameraLocalPosY; // 카메라 로컬 Y 위치 (앉기 상태에서 원래 위치로 돌아가기 위해 저장)
 
     // 상태 변수
     private bool _isWalking;
@@ -46,13 +47,19 @@ public class PlayerController : MonoBehaviour
         // 컴포넌트 초기화
         _myRigid = GetComponent<Rigidbody>();
         _myCapsule = GetComponent<CapsuleCollider>();
+        _theCameraLocalPosY = _theCamera.transform.localPosition.y;
 
-        // 초기 상태 설정
+        // 속도 초기화
         _runSpeed = _walkSpeed * _runSpeedRate;
         _crouchSpeed = _walkSpeed * _crouchSpeedRate;
         _crawlSpeed = _walkSpeed * _crawlSpeedRate;
 
         _applySpeed = _walkSpeed;
+
+        // 상태 초기화
+        _isCrouching = false;
+        _isCrawling = false;
+
     }
 
     // Update is called once per frame
@@ -63,6 +70,7 @@ public class PlayerController : MonoBehaviour
         //Move();
     }
 
+    // 입력 관리
     private void InputManage()
     {
         // 카메라 상하 조정
@@ -103,12 +111,19 @@ public class PlayerController : MonoBehaviour
         {
             EnterJump();
         }
+
+        // c 키 입력에 따른 앉기 상태 토글
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            EnterCrouch();
+        }
     }
 
 
     // 움직임
     private void Move(float moveDirX, float moveDirY)
     {
+        Debug.Log(_applySpeed);
         Vector3 moveHorizontal = transform.right * moveDirX;
         Vector3 moveVertical = transform.forward * moveDirY;
 
@@ -150,7 +165,28 @@ public class PlayerController : MonoBehaviour
 
     }
 
+    // 앉기
+    private void EnterCrouch()
+    {
+        if(!_isCrouching)
+            UpdateCrouch();
+        else
+            ExitCrouch();
+    }
 
+    private void UpdateCrouch()
+    {
+        _isCrouching = true;
+        _applySpeed = _crouchSpeed;
+        _theCamera.transform.localPosition = new Vector3(0, _theCamera.transform.localPosition.y / 2, 0);
+    }
+
+    private void ExitCrouch()
+    {
+        _theCamera.transform.localPosition = new Vector3(0, _theCameraLocalPosY, 0);
+        _isCrouching = false;
+        _applySpeed = _walkSpeed;
+    }
 
     // 상태 확인
     private void IsGrounded()
