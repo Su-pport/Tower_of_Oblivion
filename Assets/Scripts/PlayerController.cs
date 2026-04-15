@@ -117,6 +117,12 @@ public class PlayerController : MonoBehaviour
         {
             EnterCrouch();
         }
+
+        // z 키 입력에 따른 엎드리기 상태 토글
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            EnterCrawling();
+        }
     }
 
 
@@ -137,6 +143,9 @@ public class PlayerController : MonoBehaviour
     {
         if (_isCrouching)
             ExitCrouch();
+        if (_isCrawling)
+            ExitCrawling();
+
         UpdateRun();
     }
 
@@ -157,6 +166,9 @@ public class PlayerController : MonoBehaviour
     {
         if (_isCrouching)
             ExitCrouch();
+        if (_isCrawling)
+            ExitCrawling();
+
         if (_isGrounded)
         {
             UpdateJump();
@@ -172,7 +184,9 @@ public class PlayerController : MonoBehaviour
     // 앉기
     private void EnterCrouch()
     {
-        if(!_isCrouching)
+        if(_isCrawling)
+            ExitCrawling();
+        if (!_isCrouching)
             UpdateCrouch();
         else
             ExitCrouch();
@@ -182,7 +196,7 @@ public class PlayerController : MonoBehaviour
     {
         _isCrouching = true;
         _applySpeed = _crouchSpeed;
-        _theCamera.transform.localPosition = new Vector3(0, _theCamera.transform.localPosition.y / 2, 0);
+        _theCamera.transform.localPosition = new Vector3(0, _theCameraLocalPosY / 2, 0);
     }
 
     private void ExitCrouch()
@@ -190,6 +204,31 @@ public class PlayerController : MonoBehaviour
         _theCamera.transform.localPosition = new Vector3(0, _theCameraLocalPosY, 0);
         _isCrouching = false;
         _applySpeed = _walkSpeed;
+    }
+
+    // 엎드리기
+    private void EnterCrawling()
+    {
+        if (_isCrouching)
+            ExitCrouch();
+        if (!_isCrawling)
+            UpdateCrawling();
+        else
+            ExitCrawling();
+    }
+
+    private void UpdateCrawling()
+    {
+        _isCrawling = true;
+        _applySpeed = _crawlSpeed;
+        _theCamera.transform.localPosition = new Vector3(0, _theCameraLocalPosY / 4, 0);
+    }
+
+    private void ExitCrawling()
+    {
+        _isCrawling = false;
+        _applySpeed = _walkSpeed;
+        _theCamera.transform.localPosition = new Vector3(0, _theCameraLocalPosY, 0);
     }
 
     // 상태 확인
