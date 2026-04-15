@@ -135,6 +135,8 @@ public class PlayerController : MonoBehaviour
     // 달리기
     private void EnterRun()
     {
+        if (_isCrouching)
+            ExitCrouch();
         UpdateRun();
     }
 
@@ -153,7 +155,9 @@ public class PlayerController : MonoBehaviour
     // 점프
     private void EnterJump()
     {
-        if(_isGrounded)
+        if (_isCrouching)
+            ExitCrouch();
+        if (_isGrounded)
         {
             UpdateJump();
         }
