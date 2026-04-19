@@ -37,7 +37,8 @@ public class PlayerController : MonoBehaviour
     // 컴포넌트
     private Rigidbody _myRigid;
     private CapsuleCollider _myCapsule;
-
+    private RaycastHit _target;
+    
     // 스탯 관련 가중치 변수 (임시)
     private float tempDexSpeed = 1f;
 
@@ -123,6 +124,13 @@ public class PlayerController : MonoBehaviour
         {
             EnterCrawling();
         }
+
+        // 우클릭 입력에 따른 상호작용
+        if ( Input.GetMouseButtonDown(1))
+        {
+            EnterInteraction();
+        }
+
     }
 
 
@@ -236,6 +244,34 @@ public class PlayerController : MonoBehaviour
     {
         _isGrounded = Physics.Raycast(transform.position, Vector3.down, _myCapsule.bounds.extents.y + 0.1f);
     }
+
+
+    // 상호작용
+    private void EnterInteraction()
+    {
+        // 상호작용 로직 구현 (예: 레이캐스트로 앞에 있는 오브젝트 감지 후 상호작용)
+        Debug.Log("상호작용 시도");
+
+        if (Physics.Raycast(transform.position, transform.forward, out _target, 2f))
+        {
+            switch (_target.collider.tag)
+            {
+                case "NPC":
+                    UpdateInteractionNPC();
+                    break;
+                default:
+                    Debug.Log("상호작용 실패");
+                    break;
+            }
+        }
+    }
+
+    private void UpdateInteractionNPC()
+    {
+        NPC targetNPC = _target.collider.gameObject.GetComponent<NPC>();
+        targetNPC.hello();
+    }
+
 
     // 카메라
     private void  RotationCamera(float cameraRotationX)
