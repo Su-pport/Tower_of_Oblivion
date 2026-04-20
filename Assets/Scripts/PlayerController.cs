@@ -1,6 +1,6 @@
-using System.Runtime.CompilerServices;
 using UnityEngine;
-using UnityEngineInternal;
+using System.Collections;
+using System;
 
 public class PlayerController : MonoBehaviour
 {
@@ -23,6 +23,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float _cameraRotationLimit; // 카메라 회전 제한
     private float _currentCameraRotationX = 0; // 현재 카메라 상하 회전값
     private float _theCameraLocalPosY; // 카메라 로컬 Y 위치 (앉기 상태에서 원래 위치로 돌아가기 위해 저장)
+    private float _applyCameraLocalPosY; // 앉기, 엎드리기 시 목표 카메라 위치
 
     // 상태 변수
     private bool _isWalking;
@@ -60,6 +61,7 @@ public class PlayerController : MonoBehaviour
         // 상태 초기화
         _isCrouching = false;
         _isCrawling = false;
+        _isRunning = false;
 
     }
 
@@ -159,13 +161,13 @@ public class PlayerController : MonoBehaviour
 
     private void UpdateRun()
     {
-        _isWalking = true;
+        _isRunning = true;
         _applySpeed = _runSpeed;
     }
 
     private void ExitRun()
     {
-        _isWalking = false;
+        _isRunning = false;
         _applySpeed = _walkSpeed;
     }
     
@@ -192,8 +194,8 @@ public class PlayerController : MonoBehaviour
     // 앉기
     private void EnterCrouch()
     {
-        if(_isCrawling)
-            ExitCrawling();
+        if (_isCrawling)
+            _isCrawling = false;
         if (!_isCrouching)
             UpdateCrouch();
         else
@@ -203,22 +205,24 @@ public class PlayerController : MonoBehaviour
     private void UpdateCrouch()
     {
         _isCrouching = true;
+        _applyCameraLocalPosY = _theCameraLocalPosY / 2;
+        StartCoroutine(PostureCoroutine());
         _applySpeed = _crouchSpeed;
-        _theCamera.transform.localPosition = new Vector3(0, _theCameraLocalPosY / 2, 0);
     }
 
     private void ExitCrouch()
     {
-        _theCamera.transform.localPosition = new Vector3(0, _theCameraLocalPosY, 0);
         _isCrouching = false;
+        _applyCameraLocalPosY = _theCameraLocalPosY;
+        StartCoroutine(PostureCoroutine());
         _applySpeed = _walkSpeed;
-    }
+    } 
 
     // 엎드리기
     private void EnterCrawling()
     {
         if (_isCrouching)
-            ExitCrouch();
+            _isCrouching = false;
         if (!_isCrawling)
             UpdateCrawling();
         else
@@ -228,16 +232,38 @@ public class PlayerController : MonoBehaviour
     private void UpdateCrawling()
     {
         _isCrawling = true;
+        _applyCameraLocalPosY = _theCameraLocalPosY / 4;
+        StartCoroutine(PostureCoroutine());
         _applySpeed = _crawlSpeed;
-        _theCamera.transform.localPosition = new Vector3(0, _theCameraLocalPosY / 4, 0);
     }
 
     private void ExitCrawling()
     {
         _isCrawling = false;
+        _applyCameraLocalPosY = _theCameraLocalPosY;
+        StartCoroutine(PostureCoroutine());
         _applySpeed = _walkSpeed;
-        _theCamera.transform.localPosition = new Vector3(0, _theCameraLocalPosY, 0);
     }
+
+    // 앉기, 엎드리기 시 카메라 위치 보정 코루틴
+    IEnumerator PostureCoroutine()
+    {
+        float currentCameraY = _theCamera.transform.localPosition.y;
+        int cnt = 0;
+        while (currentCameraY != _applyCameraLocalPosY)
+        {
+            currentCameraY = Mathf.Lerp(currentCameraY, _applyCameraLocalPosY, 0.1f);
+            _theCamera.transform.localPosition = new Vector3(0, currentCameraY, 0);
+            yield return null;
+
+            cnt++;
+            if (cnt > 15)
+                break;
+
+        }
+        _theCamera.transform.localPosition = new Vector3(0, _applyCameraLocalPosY, 0);
+    }
+
 
     // 상태 확인
     private void IsGrounded()
@@ -274,7 +300,7 @@ public class PlayerController : MonoBehaviour
 
 
     // 카메라
-    private void  RotationCamera(float cameraRotationX)
+    private void RotationCamera(float cameraRotationX)
     {
         cameraRotationX *= _lookSensitivity;
         _currentCameraRotationX -= cameraRotationX;
