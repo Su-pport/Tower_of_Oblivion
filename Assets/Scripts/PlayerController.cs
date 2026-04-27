@@ -42,7 +42,7 @@ public class PlayerController : MonoBehaviour
     // 스탯 관련 가중치 변수 (임시)
     private float tempDexSpeed = 1f;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    // Start is called once before the first execution of In after the MonoBehaviour is created
     void Start()
     {
         // 컴포넌트 초기화
@@ -63,7 +63,7 @@ public class PlayerController : MonoBehaviour
 
     }
 
-    // Update is called once per frame
+    // In is called once per frame
     void Update()
     {
         InputManage();
@@ -99,36 +99,36 @@ public class PlayerController : MonoBehaviour
         // shift 키 입력에 따른 달리기 상태 전환
         if (Input.GetKey(KeyCode.LeftShift))
         {
-            EnterRun();
+            StartRun();
         }
         // shift 키에서 손을 뗐을 때 달리기 상태 종료
         if (Input.GetKeyUp(KeyCode.LeftShift))
         {
-            ExitRun();
+            EndRun();
         }
 
         // 스페이스 키 입력에 따른 점프
         if (Input.GetKey(KeyCode.Space))
         {
-            EnterJump();
+            StartJump();
         }
 
         // c 키 입력에 따른 앉기 상태 토글
         if (Input.GetKeyDown(KeyCode.C))
         {
-            EnterCrouch();
+            StartCrouch();
         }
 
         // z 키 입력에 따른 엎드리기 상태 토글
         if (Input.GetKeyDown(KeyCode.Z))
         {
-            EnterCrawling();
+            StartCrawling();
         }
 
         // 우클릭 입력에 따른 상호작용
         if ( Input.GetMouseButtonDown(1))
         {
-            EnterInteraction();
+            StartInteraction();
         }
 
     }
@@ -147,67 +147,67 @@ public class PlayerController : MonoBehaviour
     }
 
     // 달리기
-    private void EnterRun()
+    private void StartRun()
     {
         if (_isCrouching)
-            ExitCrouch();
+            EndCrouch();
         if (_isCrawling)
-            ExitCrawling();
+            EndCrawling();
 
-        UpdateRun();
+        InRun();
     }
 
-    private void UpdateRun()
+    private void InRun()
     {
         _isWalking = true;
         _applySpeed = _runSpeed;
     }
 
-    private void ExitRun()
+    private void EndRun()
     {
         _isWalking = false;
         _applySpeed = _walkSpeed;
     }
     
     // 점프
-    private void EnterJump()
+    private void StartJump()
     {
         if (_isCrouching)
-            ExitCrouch();
+            EndCrouch();
         if (_isCrawling)
-            ExitCrawling();
+            EndCrawling();
 
         if (_isGrounded)
         {
-            UpdateJump();
+            InJump();
         }
     }
 
-    private void UpdateJump()
+    private void InJump()
     {
         _myRigid.linearVelocity = transform.up * _jumpForce;
 
     }
 
     // 앉기
-    private void EnterCrouch()
+    private void StartCrouch()
     {
         if(_isCrawling)
-            ExitCrawling();
+            EndCrawling();
         if (!_isCrouching)
-            UpdateCrouch();
+            InCrouch();
         else
-            ExitCrouch();
+            EndCrouch();
     }
 
-    private void UpdateCrouch()
+    private void InCrouch()
     {
         _isCrouching = true;
         _applySpeed = _crouchSpeed;
         _theCamera.transform.localPosition = new Vector3(0, _theCameraLocalPosY / 2, 0);
     }
 
-    private void ExitCrouch()
+    private void EndCrouch()
     {
         _theCamera.transform.localPosition = new Vector3(0, _theCameraLocalPosY, 0);
         _isCrouching = false;
@@ -215,24 +215,24 @@ public class PlayerController : MonoBehaviour
     }
 
     // 엎드리기
-    private void EnterCrawling()
+    private void StartCrawling()
     {
         if (_isCrouching)
-            ExitCrouch();
+            EndCrouch();
         if (!_isCrawling)
-            UpdateCrawling();
+            InCrawling();
         else
-            ExitCrawling();
+            EndCrawling();
     }
 
-    private void UpdateCrawling()
+    private void InCrawling()
     {
         _isCrawling = true;
         _applySpeed = _crawlSpeed;
         _theCamera.transform.localPosition = new Vector3(0, _theCameraLocalPosY / 4, 0);
     }
 
-    private void ExitCrawling()
+    private void EndCrawling()
     {
         _isCrawling = false;
         _applySpeed = _walkSpeed;
@@ -247,7 +247,7 @@ public class PlayerController : MonoBehaviour
 
 
     // 상호작용
-    private void EnterInteraction()
+    private void StartInteraction()
     {
         // 상호작용 로직 구현 (예: 레이캐스트로 앞에 있는 오브젝트 감지 후 상호작용)
         Debug.Log("상호작용 시도");
@@ -257,7 +257,7 @@ public class PlayerController : MonoBehaviour
             switch (_target.collider.tag)
             {
                 case "NPC":
-                    UpdateInteractionNPC();
+                    InInteractionNPC();
                     break;
                 default:
                     Debug.Log("상호작용 실패");
@@ -266,7 +266,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void UpdateInteractionNPC()
+    private void InInteractionNPC()
     {
         NPC targetNPC = _target.collider.gameObject.GetComponent<NPC>();
         targetNPC.hello();
