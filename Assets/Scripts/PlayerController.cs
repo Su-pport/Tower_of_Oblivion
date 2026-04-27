@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngineInternal;
 
 public class PlayerController : MonoBehaviour
@@ -66,72 +67,44 @@ public class PlayerController : MonoBehaviour
     // In is called once per frame
     void Update()
     {
-        InputManage();
+        HandleInput();
         IsGrounded();
         //Move();
     }
 
     // 입력 관리
-    private void InputManage()
+    private void HandleInput()
     {
-        // 카메라 상하 조정
-        float cameraRotationX = Input.GetAxisRaw("Mouse Y");
-        if (cameraRotationX != 0)
-        {
-            RotationCamera(cameraRotationX);
-        }
+        var input = InputManager.Instance;
 
-        // 카메라 좌우 조정(캐릭터 좌우 회전)
-        float characterRotationY = Input.GetAxisRaw("Mouse X");
-        if (characterRotationY != 0)
-        {
-            RotationCharacter(characterRotationY);
-        }
+        if (input.MouseY != 0)
+            RotationCamera(input.MouseY);
 
-        // w, a, s, d 키 입력에 따른 움직임
-        float moveDirX = Input.GetAxisRaw("Horizontal");
-        float moveDirY = Input.GetAxisRaw("Vertical");
-        if (moveDirX != 0 || moveDirY != 0)
-        {
-            Move(moveDirX, moveDirY);
-        }
+        if (input.MouseX != 0)
+            RotationCharacter(input.MouseX);
 
-        // shift 키 입력에 따른 달리기 상태 전환
-        if (Input.GetKey(KeyCode.LeftShift))
-        {
+        if (input.MoveX != 0 || input.MoveY != 0)
+            Move(input.MoveX, input.MoveY);
+
+        if (input.Run)
             StartRun();
-        }
-        // shift 키에서 손을 뗐을 때 달리기 상태 종료
-        if (Input.GetKeyUp(KeyCode.LeftShift))
-        {
+
+        if (input.RunUp)
             EndRun();
-        }
 
-        // 스페이스 키 입력에 따른 점프
-        if (Input.GetKey(KeyCode.Space))
-        {
+        if (input.Jump)
             StartJump();
-        }
 
-        // c 키 입력에 따른 앉기 상태 토글
-        if (Input.GetKeyDown(KeyCode.C))
-        {
-            StartCrouch();
-        }
+        if (input.CrouchDown)
+            StartCrouch();      
 
-        // z 키 입력에 따른 엎드리기 상태 토글
-        if (Input.GetKeyDown(KeyCode.Z))
-        {
-            StartCrawling();
-        }
-
-        // 우클릭 입력에 따른 상호작용
-        if ( Input.GetMouseButtonDown(1))
-        {
+        if (input.CrawlDown)
+            StartCrawling();     
+            
+        if (input.InteractionDown)
             StartInteraction();
-        }
-
     }
+
 
 
     // 움직임
