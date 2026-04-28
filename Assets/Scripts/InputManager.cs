@@ -20,6 +20,8 @@ public class InputManager : MonoBehaviour
     public bool CrawlDown { get; private set; }
     public bool InteractionDown { get; private set; }
 
+    
+
     private void Awake()
     {
         if (Instance == null)
@@ -50,5 +52,8 @@ public class InputManager : MonoBehaviour
         CrouchDown = Input.GetKeyDown(KeyCode.C);
         CrawlDown = Input.GetKeyDown(KeyCode.Z);
         InteractionDown = Input.GetMouseButtonDown(1);
+
+
+
     }
 }

@@ -3,7 +3,9 @@ using UnityEngine.SceneManagement;
 
 public class MenuManager : MonoBehaviour
 {
-    public GameObject settingsPanel;
+    [Header("Panels")]
+    [SerializeField] private GameObject mainMenuPanel;
+    [SerializeField] private GameObject settingsPanel;
 
     public void StartGame()
     {
@@ -21,11 +23,14 @@ public class MenuManager : MonoBehaviour
 
     public void OpenSettings()
     {
+        mainMenuPanel.SetActive(false);
         settingsPanel.SetActive(true);
     }
 
     public void CloseSetting()
     {
         settingsPanel.SetActive(false);
+        mainMenuPanel.SetActive(true);
     }
+
 }
