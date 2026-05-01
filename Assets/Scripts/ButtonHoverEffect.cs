@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 using TMPro;
 
 public class ButtonHoverEffect : MonoBehaviour,
@@ -16,11 +15,14 @@ public class ButtonHoverEffect : MonoBehaviour,
     [Header("Colors")]
     [SerializeField] private Color normalTextColor = Color.white;
     [SerializeField] private Color hoverTextColor = Color.black;
+    [SerializeField] private Color selectedTextColor;
 
     [Header("Scale")]
     [SerializeField] private float hoverScale = 1.05f;
 
     private Vector3 originalScale;
+
+    private bool isSelected = false;
 
     private void Awake()
     {
@@ -39,9 +41,12 @@ public class ButtonHoverEffect : MonoBehaviour,
     {
         if (fillPanel != null)
             fillPanel.SetActive(true);
-
-        if (buttonText != null)
+        
+        //Selected가 아닐 때만 색 변경
+        if (!isSelected)
+        {
             buttonText.color = hoverTextColor;
+        }
 
         //커지기
         transform.localScale = originalScale * hoverScale;
@@ -52,9 +57,12 @@ public class ButtonHoverEffect : MonoBehaviour,
     {
         if (fillPanel != null)
             fillPanel.SetActive(false);
-
-        if (buttonText != null)
+        
+        //Selected가 아닐 때만 원래 색으로
+        if (!isSelected)
+        {
             buttonText.color = normalTextColor;
+        }
         
         //원래 크기로
         transform.localScale = originalScale;
@@ -63,7 +71,8 @@ public class ButtonHoverEffect : MonoBehaviour,
     private void OnDisable()
     {
         //Fill 끄기
-        fillPanel.SetActive(false);
+        if (fillPanel != null)
+            fillPanel.SetActive(false);
 
         //텍스트 색 원래대로
         buttonText.color = normalTextColor;
@@ -71,6 +80,15 @@ public class ButtonHoverEffect : MonoBehaviour,
         //스케일 원래대로
         transform.localScale = originalScale;
     }
-}
 
+    public void SetSelected(bool selcted)
+    {
+        isSelected = selcted;
+
+        //선택 상자가 바뀔 때 스케일은 항상 원래로
+        buttonText.color = selcted ? selectedTextColor : normalTextColor;
+        transform.localScale = originalScale;
+    }
+
+}
 

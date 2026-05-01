@@ -5,7 +5,8 @@ public class MenuManager : MonoBehaviour
 {
     [Header("Panels")]
     [SerializeField] private GameObject mainMenuPanel;
-    [SerializeField] private GameObject settingsPanel;
+    [SerializeField] private GameObject settingPanel;
+    [SerializeField] private SettingTabManager settingTabManager;
 
     public void StartGame()
     {
@@ -24,13 +25,10 @@ public class MenuManager : MonoBehaviour
     public void OpenSettings()
     {
         mainMenuPanel.SetActive(false);
-        settingsPanel.SetActive(true);
+        settingPanel.SetActive(true);
+
+        settingTabManager.ResetToDefaultTab();
     }
 
-    public void CloseSetting()
-    {
-        settingsPanel.SetActive(false);
-        mainMenuPanel.SetActive(true);
-    }
 
 }
