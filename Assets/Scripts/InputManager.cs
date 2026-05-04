@@ -5,22 +5,21 @@ public class InputManager : MonoBehaviour
     public static InputManager Instance;
 
     // Mouse
-    public float MouseX { get; private set; }
-    public float MouseY { get; private set; }
+    public float _mouseX { get; private set; }
+    public float _mouseY { get; private set; }
 
     // Move
-    public float MoveX { get; private set; }
-    public float MoveY { get; private set; }
+    public float _moveX { get; private set; }
+    public float _moveY { get; private set; }
 
     // Actions
-    public bool Run { get; private set; }
-    public bool RunUp { get; private set; }
-    public bool Jump { get; private set; }
-    public bool CrouchDown { get; private set; }
-    public bool CrawlDown { get; private set; }
-    public bool InteractionDown { get; private set; }
-
-    
+    public bool _run { get; private set; }
+    public bool _runRollUp { get; private set; }
+    public bool _jump { get; private set; }
+    public bool _crouchDown { get; private set; }
+    public bool _crawlDown { get; private set; }
+    public bool _interactionDown { get; private set; }
+    public bool _runRollDown {get; private set; }
 
     private void Awake()
     {
@@ -38,22 +37,20 @@ public class InputManager : MonoBehaviour
     private void Update()
     {
         // 마우스
-        MouseX = Input.GetAxisRaw("Mouse X");
-        MouseY = Input.GetAxisRaw("Mouse Y");
+        _mouseX = Input.GetAxisRaw("Mouse X");
+        _mouseY = Input.GetAxisRaw("Mouse Y");
 
         // 이동
-        MoveX = Input.GetAxisRaw("Horizontal");
-        MoveY = Input.GetAxisRaw("Vertical");
+        _moveX = Input.GetAxisRaw("Horizontal");
+        _moveY = Input.GetAxisRaw("Vertical");
 
         // 행동
-        Run = Input.GetKey(KeyCode.LeftShift);
-        RunUp = Input.GetKeyUp(KeyCode.LeftShift);
-        Jump = Input.GetKey(KeyCode.Space);
-        CrouchDown = Input.GetKeyDown(KeyCode.C);
-        CrawlDown = Input.GetKeyDown(KeyCode.Z);
-        InteractionDown = Input.GetMouseButtonDown(1);
-
-
-
+        _runRollDown = Input.GetKeyDown(KeyCode.LeftShift);
+        _run = Input.GetKey(KeyCode.LeftShift);
+        _runRollUp = Input.GetKeyUp(KeyCode.LeftShift);
+        _jump = Input.GetKey(KeyCode.Space);
+        _crouchDown = Input.GetKeyDown(KeyCode.C);
+        _crawlDown = Input.GetKeyDown(KeyCode.Z);
+        _interactionDown = Input.GetMouseButtonDown(1);
     }
 }
