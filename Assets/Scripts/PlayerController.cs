@@ -108,7 +108,7 @@ public class PlayerController : MonoBehaviour
             EndRun();
 
             float pressDuration = Time.time - pressStartTime;
-            Debug.Log(pressDuration);
+            //Debug.Log(pressDuration);
             if(pressDuration <= threshold)
                 StartRoll(input._moveX, input._moveY);            
         }
@@ -142,7 +142,7 @@ public class PlayerController : MonoBehaviour
         Vector3 moveVertical = transform.forward * moveDirY;
 
         Vector3 velocity = (moveHorizontal + moveVertical).normalized * (_applySpeed * _stat.moveSpeedRate);
-        Debug.Log(_applySpeed*_stat.moveSpeedRate); 
+        //Debug.Log(_applySpeed*_stat.moveSpeedRate); 
 
         _myRigid.MovePosition(transform.position + velocity * Time.deltaTime);
     }
@@ -268,7 +268,8 @@ public class PlayerController : MonoBehaviour
     {
         if (!_isRolling&&_isGrounded)
         {
-            InRoll(moveDirX, moveDirY);
+            if(_stat.UseStamina(5)) // 구르기에 필요한 스테미너 양을 입력, 사용 가능하면 true 반환
+                InRoll(moveDirX, moveDirY);
         }
     }
 
