@@ -85,6 +85,7 @@ public class Stat : MonoBehaviour
                     if (_currentST >= _maxST) // 최대 스테미너를 초과하지 않도록 제한
                     {
                         _currentST = _maxST;
+                        Debug.Log(_currentST + "/" + _maxST);
                         timer = 0f; // 최대 스테미너에 도달하면 타이머 초기화
                     }
                 }
@@ -101,8 +102,8 @@ public class Stat : MonoBehaviour
             return false; // 스테미너가 부족하여 사용할 수 없음
         }
         else {
-            Debug.Log(_currentST + "/" + _maxST);
             _currentST -= amount;
+            Debug.Log(_currentST + "/" + _maxST);
             initialized = false;
             return true;
         }
