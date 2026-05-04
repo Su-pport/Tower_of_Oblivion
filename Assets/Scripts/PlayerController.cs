@@ -44,9 +44,10 @@ public class PlayerController : MonoBehaviour
     private Rigidbody _myRigid;
     private CapsuleCollider _myCapsule;
     private RaycastHit _target;
+
     
     // 스탯 관련 가중치 변수 (임시)
-    Stat _stat;
+    private Stat _stat;
     private float _agiSpeedRate;
 
     // Start is called once before the first execution of In after the MonoBehaviour is created
@@ -109,10 +110,10 @@ public class PlayerController : MonoBehaviour
             float pressDuration = Time.time - pressStartTime;
             Debug.Log(pressDuration);
             if(pressDuration <= threshold)
-                StartRoll();            
+                StartRoll(input._moveX, input._moveY);            
         }
         
-        if (input._run && !_isRunning && Time.time - pressStartTime > threshold)
+        if (input._run && !_isRunning && Time.time - pressStartTime > threshold) // threshold이상 누르면 달리기, 달리고 있으면 실행X
             StartRun();
 
         // if (input._runUp)
@@ -141,7 +142,7 @@ public class PlayerController : MonoBehaviour
         Vector3 moveVertical = transform.forward * moveDirY;
 
         Vector3 velocity = (moveHorizontal + moveVertical).normalized * (_applySpeed * _stat.moveSpeedRate);
-        //Debug.Log(_applySpeed*_stat.moveSpeedRate); 
+        Debug.Log(_applySpeed*_stat.moveSpeedRate); 
 
         _myRigid.MovePosition(transform.position + velocity * Time.deltaTime);
     }
@@ -177,7 +178,7 @@ public class PlayerController : MonoBehaviour
         if (_isCrawling)
             EndCrawl();
 
-        if (_isGrounded)
+        if (_isGrounded&&!_isRolling)
         {
             InJump();
         }
@@ -263,14 +264,18 @@ public class PlayerController : MonoBehaviour
     }
 
     // 구르기
-    private void StartRoll()
+    private void StartRoll(float moveDirX, float moveDirY)
     {
-        Debug.Log("구르기");
+        if (!_isRolling&&_isGrounded)
+        {
+            InRoll(moveDirX, moveDirY);
+        }
     }
 
-    private void InRoll()
+    private void InRoll(float moveDirX, float moveDirY)
     {
         _isRolling = true;
+        StartCoroutine(RollCoroutine(moveDirX, moveDirY));
     }
 
     private void EndRoll()
@@ -278,10 +283,56 @@ public class PlayerController : MonoBehaviour
         _isRolling = false;
     }
 
-    IEnumerator RollCoroutine()
+    IEnumerator RollCoroutine(float moveDirX, float moveDirY)
     {
-        yield return null; //카메라 아래위 이동
-        // input._moveX, Y 이용해서 방향 받아서 일정거리 이동
+        // 구르기 속도 및 시간 설정 (임시값, 추후 조정 필요)
+        float rollSpeed1 = _walkSpeed * 6f; // 구르기 속도 (임시)
+        float rollSpeed2 = _walkSpeed * 4f; // 구르기 후반 감속 속도 (임시)
+        
+        float rollTime1 = 0.25f; // 구르기 초반 시간 (임시)
+        float rollTime2 = 0.15f; // 구르기 후반 감속 시간 (임시)
+
+        float timer = 0f;
+
+        Vector3 dir = new Vector3(moveDirX, 0, moveDirY).normalized;
+
+        // 구르기 카메라 설정
+        float startCameraY = _theCameraLocalPosY;
+        float downCameraY = _theCameraLocalPosY / 3.5f;
+
+
+
+
+        while (timer < rollTime1)
+        {
+            _myRigid.MovePosition(transform.position + transform.TransformDirection(dir) * rollSpeed1 * Time.deltaTime);
+
+
+            float cameraSpeed = timer/rollTime1; // 0에서 1로 증가하는 값
+            float currentCameraY = Mathf.Lerp(startCameraY, downCameraY, cameraSpeed);
+            _theCamera.transform.localPosition = new Vector3(0, currentCameraY, 0);
+
+
+            timer += Time.deltaTime;
+            yield return null;
+        }
+
+        timer = 0f;
+
+        while (timer < rollTime2)
+        {
+            _myRigid.MovePosition(transform.position + transform.TransformDirection(dir) * rollSpeed2 * Time.deltaTime);
+
+            float cameraSpeed = timer / rollTime2; // 0에서 1로 증가하는 값
+            float currentCameraY = Mathf.Lerp(downCameraY, startCameraY, cameraSpeed);
+            _theCamera.transform.localPosition = new Vector3(0, currentCameraY, 0);
+
+            timer += Time.deltaTime;
+            yield return null;
+        }
+
+        _isRolling = false;
+        yield return null;
     }
 
     // 상태 확인
