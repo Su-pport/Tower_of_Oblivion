@@ -1,7 +1,6 @@
-using System.Runtime.CompilerServices;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngineInternal;
+using System.Collections;
+using System;
 
 public class PlayerController : MonoBehaviour
 {
@@ -24,6 +23,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float _cameraRotationLimit; // 카메라 회전 제한
     private float _currentCameraRotationX = 0; // 현재 카메라 상하 회전값
     private float _theCameraLocalPosY; // 카메라 로컬 Y 위치 (앉기 상태에서 원래 위치로 돌아가기 위해 저장)
+    private float _applyCameraLocalPosY; // 앉기, 엎드리기 시 목표 카메라 위치
+
 
     // 상태 변수
     private bool _isWalking;
@@ -32,8 +33,12 @@ public class PlayerController : MonoBehaviour
     private bool _isJumping;
     private bool _isGrounded;
     private bool _isCrawling;
+    private bool _isRolling;
 
-
+    // 구르기 변수
+    float pressStartTime; // 누르기 시작한 시점을 저장
+    float threshold = 0.2f; // 얼마나 짧게 눌러야 구르기를 할 지 구분을 위한 변수
+    float rollInvincible = 0.2f; // 구르는동안 무적 시간
 
     // 컴포넌트
     private Rigidbody _myRigid;
@@ -41,7 +46,8 @@ public class PlayerController : MonoBehaviour
     private RaycastHit _target;
     
     // 스탯 관련 가중치 변수 (임시)
-    private float tempDexSpeed = 1f;
+    Stat _stat;
+    private float _agiSpeedRate;
 
     // Start is called once before the first execution of In after the MonoBehaviour is created
     void Start()
@@ -50,6 +56,7 @@ public class PlayerController : MonoBehaviour
         _myRigid = GetComponent<Rigidbody>();
         _myCapsule = GetComponent<CapsuleCollider>();
         _theCameraLocalPosY = _theCamera.transform.localPosition.y;
+        _stat = GetComponent<Stat>();
 
         // 속도 초기화
         _runSpeed = _walkSpeed * _runSpeedRate;
@@ -58,9 +65,12 @@ public class PlayerController : MonoBehaviour
 
         _applySpeed = _walkSpeed;
 
+
         // 상태 초기화
+        _isRunning = false;
         _isCrouching = false;
         _isCrawling = false;
+        _isRolling = false;
 
     }
 
@@ -77,31 +87,47 @@ public class PlayerController : MonoBehaviour
     {
         var input = InputManager.Instance;
 
-        if (input.MouseY != 0)
-            RotationCamera(input.MouseY);
+        if (input._mouseY != 0)
+            RotationCamera(input._mouseY);
 
-        if (input.MouseX != 0)
-            RotationCharacter(input.MouseX);
+        if (input._mouseX != 0)
+            RotationCharacter(input._mouseX);
 
-        if (input.MoveX != 0 || input.MoveY != 0)
-            Move(input.MoveX, input.MoveY);
+        if (input._moveX != 0 || input._moveY != 0)
+            Move(input._moveX, input._moveY);
 
-        if (input.Run)
-            StartRun();
+        
+        if (input._runRollDown)
+        {
+            pressStartTime = Time.time;
+        }
 
-        if (input.RunUp)
+        if (input._runRollUp)
+        {
             EndRun();
 
-        if (input.Jump)
+            float pressDuration = Time.time - pressStartTime;
+            Debug.Log(pressDuration);
+            if(pressDuration <= threshold)
+                StartRoll();            
+        }
+        
+        if (input._run && !_isRunning && Time.time - pressStartTime > threshold)
+            StartRun();
+
+        // if (input._runUp)
+        //     EndRun();
+
+        if (input._jump)
             StartJump();
 
-        if (input.CrouchDown)
+        if (input._crouchDown)
             StartCrouch();      
 
-        if (input.CrawlDown)
-            StartCrawling();     
+        if (input._crawlDown)
+            StartCrawl();     
             
-        if (input.InteractionDown)
+        if (input._interactionDown)
             StartInteraction();
     }
 
@@ -110,11 +136,12 @@ public class PlayerController : MonoBehaviour
     // 움직임
     private void Move(float moveDirX, float moveDirY)
     {
-        Debug.Log(_applySpeed);
+        if(_isRolling) return;
         Vector3 moveHorizontal = transform.right * moveDirX;
         Vector3 moveVertical = transform.forward * moveDirY;
 
-        Vector3 velocity = (moveHorizontal + moveVertical).normalized * (_applySpeed * tempDexSpeed);
+        Vector3 velocity = (moveHorizontal + moveVertical).normalized * (_applySpeed * _stat.moveSpeedRate);
+        //Debug.Log(_applySpeed*_stat.moveSpeedRate); 
 
         _myRigid.MovePosition(transform.position + velocity * Time.deltaTime);
     }
@@ -125,30 +152,30 @@ public class PlayerController : MonoBehaviour
         if (_isCrouching)
             EndCrouch();
         if (_isCrawling)
-            EndCrawling();
+            EndCrawl();
 
         InRun();
     }
 
     private void InRun()
     {
-        _isWalking = true;
+        _isRunning = true;
         _applySpeed = _runSpeed;
     }
 
     private void EndRun()
     {
-        _isWalking = false;
+        _isRunning = false;
         _applySpeed = _walkSpeed;
     }
-    
+
     // 점프
     private void StartJump()
     {
         if (_isCrouching)
             EndCrouch();
         if (_isCrawling)
-            EndCrawling();
+            EndCrawl();
 
         if (_isGrounded)
         {
@@ -166,7 +193,7 @@ public class PlayerController : MonoBehaviour
     private void StartCrouch()
     {
         if(_isCrawling)
-            EndCrawling();
+            EndCrawl();
         if (!_isCrouching)
             InCrouch();
         else
@@ -176,40 +203,85 @@ public class PlayerController : MonoBehaviour
     private void InCrouch()
     {
         _isCrouching = true;
+        _applyCameraLocalPosY = _theCameraLocalPosY / 2;
+        StartCoroutine(PostureCoroutine());
         _applySpeed = _crouchSpeed;
-        _theCamera.transform.localPosition = new Vector3(0, _theCameraLocalPosY / 2, 0);
     }
 
     private void EndCrouch()
     {
-        _theCamera.transform.localPosition = new Vector3(0, _theCameraLocalPosY, 0);
         _isCrouching = false;
+        _applyCameraLocalPosY = _theCameraLocalPosY;
+        StartCoroutine(PostureCoroutine());
         _applySpeed = _walkSpeed;
     }
 
     // 엎드리기
-    private void StartCrawling()
+    private void StartCrawl()
     {
         if (_isCrouching)
             EndCrouch();
         if (!_isCrawling)
-            InCrawling();
+            InCrawl();
         else
-            EndCrawling();
+            EndCrawl();
     }
 
-    private void InCrawling()
+    private void InCrawl()
     {
         _isCrawling = true;
+        _applyCameraLocalPosY = _theCameraLocalPosY / 4;
+        StartCoroutine(PostureCoroutine());
         _applySpeed = _crawlSpeed;
-        _theCamera.transform.localPosition = new Vector3(0, _theCameraLocalPosY / 4, 0);
     }
 
-    private void EndCrawling()
+    private void EndCrawl()
     {
         _isCrawling = false;
+        _applyCameraLocalPosY = _theCameraLocalPosY;
+        StartCoroutine(PostureCoroutine());
         _applySpeed = _walkSpeed;
-        _theCamera.transform.localPosition = new Vector3(0, _theCameraLocalPosY, 0);
+    }
+
+    // 앉기, 엎드리기 시 카메라 위치 보정 코루틴
+    IEnumerator PostureCoroutine()
+    {
+        float currentCameraY = _theCamera.transform.localPosition.y;
+        int cnt = 0;
+        while (currentCameraY != _applyCameraLocalPosY)
+        {
+            currentCameraY = Mathf.Lerp(currentCameraY, _applyCameraLocalPosY, 0.2f);
+            _theCamera.transform.localPosition = new Vector3(0, currentCameraY, 0);
+            yield return null;
+
+            cnt++;
+            if (cnt > 15)
+                break;
+
+        }
+        _theCamera.transform.localPosition = new Vector3(0, _applyCameraLocalPosY, 0);
+    }
+
+    // 구르기
+    private void StartRoll()
+    {
+        Debug.Log("구르기");
+    }
+
+    private void InRoll()
+    {
+        _isRolling = true;
+    }
+
+    private void EndRoll()
+    {
+        _isRolling = false;
+    }
+
+    IEnumerator RollCoroutine()
+    {
+        yield return null; //카메라 아래위 이동
+        // input._moveX, Y 이용해서 방향 받아서 일정거리 이동
     }
 
     // 상태 확인
