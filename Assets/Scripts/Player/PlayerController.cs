@@ -44,11 +44,13 @@ public class PlayerController : MonoBehaviour
     private Rigidbody _myRigid;
     private CapsuleCollider _myCapsule;
     private RaycastHit _target;
-
     
     // 스탯 관련 가중치 변수 (임시)
     private Stat _stat;
     private float _agiSpeedRate;
+
+    // 고정된 움직임을 위한 변수
+    private Vector3 inputDir;
 
     // Start is called once before the first execution of In after the MonoBehaviour is created
     void Start()
@@ -83,6 +85,11 @@ public class PlayerController : MonoBehaviour
         //Move();
     }
 
+    private void FixedUpdate() {
+        Vector3 velocity = inputDir.normalized * (_applySpeed * _stat.moveSpeedRate);
+        _myRigid.MovePosition(transform.position + velocity * Time.fixedDeltaTime);
+    }
+
     // 입력 관리
     private void HandleInput()
     {
@@ -94,9 +101,8 @@ public class PlayerController : MonoBehaviour
         if (input._mouseX != 0)
             RotationCharacter(input._mouseX);
 
-        if (input._moveX != 0 || input._moveY != 0)
-            Move(input._moveX, input._moveY);
-
+        // fixedUpdate를 위해 따로 저장
+        inputDir = new Vector3(input._moveX, 0, input._moveY);
         
         if (input._runRollDown)
         {
@@ -126,7 +132,7 @@ public class PlayerController : MonoBehaviour
             StartCrouch();      
 
         if (input._crawlDown)
-            StartCrawl();     
+            StartCrawl();       
             
         if (input._interactionDown)
             StartInteraction();
@@ -314,8 +320,8 @@ public class PlayerController : MonoBehaviour
             _theCamera.transform.localPosition = new Vector3(0, currentCameraY, 0);
 
 
-            timer += Time.deltaTime;
-            yield return null;
+            timer += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
         }
 
         timer = 0f;
@@ -328,8 +334,8 @@ public class PlayerController : MonoBehaviour
             float currentCameraY = Mathf.Lerp(downCameraY, startCameraY, cameraSpeed);
             _theCamera.transform.localPosition = new Vector3(0, currentCameraY, 0);
 
-            timer += Time.deltaTime;
-            yield return null;
+            timer += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
         }
 
         _isRolling = false;
