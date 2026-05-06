@@ -5,7 +5,7 @@ using UnityEngine;
 public class NPC : MonoBehaviour
 {
     TextMeshPro _npcText;
-
+    // .
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
