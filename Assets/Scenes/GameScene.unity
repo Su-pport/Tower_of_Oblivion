@@ -1314,7 +1314,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02309c90431cc684aae120249d13a89d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  _walkSpeed: 10
+  _walkSpeed: 5
   _runSpeedRate: 2
   _crouchSpeedRate: 0.8
   _crawlSpeedRate: 0.3
@@ -1322,6 +1322,12 @@ MonoBehaviour:
   _theCamera: {fileID: 330585545}
   _lookSensitivity: 1
   _cameraRotationLimit: 60
+  threshold: 0.2
+  rollInvincible: 0.2
+  rollSpeed1: 12.5
+  rollSpeed2: 7.5
+  rollTime1: 0.2
+  rollTime2: 0.1
 --- !u!136 &1468171159
 CapsuleCollider:
   m_ObjectHideFlags: 0

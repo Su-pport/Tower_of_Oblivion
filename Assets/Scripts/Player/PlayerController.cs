@@ -36,9 +36,19 @@ public class PlayerController : MonoBehaviour
     private bool _isRolling;
 
     // 구르기 변수
-    float pressStartTime; // 누르기 시작한 시점을 저장
-    float threshold = 0.2f; // 얼마나 짧게 눌러야 구르기를 할 지 구분을 위한 변수
-    float rollInvincible = 0.2f; // 구르는동안 무적 시간
+    private float pressStartTime; // 누르기 시작한 시점을 저장
+    [SerializeField] private float threshold = 0.2f; // 얼마나 짧게 눌러야 구르기를 할 지 구분을 위한 변수
+    [SerializeField] private float rollInvincible = 0.2f; // 구르는동안 무적 시간
+
+    // 구르기 속도 및 시간 설정 (임시값, 추후 조정 필요)
+    [SerializeField] private float rollSpeed1 = 60f; // 구르기 속도 (임시)
+    [SerializeField] private float rollSpeed2 = 30f; // 구르기 후반 감속 속도 (임시)
+
+    [SerializeField] private float rollTime1 = 0.25f; // 구르기 초반 시간 (임시)
+    [SerializeField] private float rollTime2 = 0.15f; // 구르기 후반 감속 시간 (임시)
+
+
+
 
     // 컴포넌트
     private Rigidbody _myRigid;
@@ -85,9 +95,19 @@ public class PlayerController : MonoBehaviour
         //Move();
     }
 
-    private void FixedUpdate() {
-        Vector3 velocity = inputDir.normalized * (_applySpeed * _stat.moveSpeedRate);
-        _myRigid.MovePosition(transform.position + velocity * Time.fixedDeltaTime);
+    private void FixedUpdate()
+    {
+        //if (_isRolling) return; // 구르는 동안 고정된 움직임 방지
+        if (inputDir != Vector3.zero && !_isRolling)
+        {
+            // 입력 방향을 캐릭터 로컬 좌표계로 변환
+            Vector3 moveDir = transform.TransformDirection(inputDir.normalized);
+            Vector3 velocity = moveDir * (_applySpeed * _stat.moveSpeedRate);
+
+            Debug.Log(_applySpeed*_stat.moveSpeedRate); 
+
+            _myRigid.MovePosition(transform.position + velocity * Time.fixedDeltaTime);
+        }
     }
 
     // 입력 관리
@@ -148,7 +168,6 @@ public class PlayerController : MonoBehaviour
         Vector3 moveVertical = transform.forward * moveDirY;
 
         Vector3 velocity = (moveHorizontal + moveVertical).normalized * (_applySpeed * _stat.moveSpeedRate);
-        //Debug.Log(_applySpeed*_stat.moveSpeedRate); 
 
         _myRigid.MovePosition(transform.position + velocity * Time.deltaTime);
     }
@@ -292,13 +311,6 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator RollCoroutine(float moveDirX, float moveDirY)
     {
-        // 구르기 속도 및 시간 설정 (임시값, 추후 조정 필요)
-        float rollSpeed1 = _walkSpeed * 6f; // 구르기 속도 (임시)
-        float rollSpeed2 = _walkSpeed * 4f; // 구르기 후반 감속 속도 (임시)
-        
-        float rollTime1 = 0.25f; // 구르기 초반 시간 (임시)
-        float rollTime2 = 0.15f; // 구르기 후반 감속 시간 (임시)
-
         float timer = 0f;
 
         Vector3 dir = new Vector3(moveDirX, 0, moveDirY).normalized;
@@ -308,11 +320,9 @@ public class PlayerController : MonoBehaviour
         float downCameraY = _theCameraLocalPosY / 3.5f;
 
 
-
-
         while (timer < rollTime1)
         {
-            _myRigid.MovePosition(transform.position + transform.TransformDirection(dir) * rollSpeed1 * Time.deltaTime);
+            _myRigid.MovePosition(transform.position + transform.TransformDirection(dir) * rollSpeed1 * Time.fixedDeltaTime);
 
 
             float cameraSpeed = timer/rollTime1; // 0에서 1로 증가하는 값
@@ -328,7 +338,7 @@ public class PlayerController : MonoBehaviour
 
         while (timer < rollTime2)
         {
-            _myRigid.MovePosition(transform.position + transform.TransformDirection(dir) * rollSpeed2 * Time.deltaTime);
+            _myRigid.MovePosition(transform.position + transform.TransformDirection(dir) * rollSpeed2 * Time.fixedDeltaTime);
 
             float cameraSpeed = timer / rollTime2; // 0에서 1로 증가하는 값
             float currentCameraY = Mathf.Lerp(downCameraY, startCameraY, cameraSpeed);
@@ -339,7 +349,6 @@ public class PlayerController : MonoBehaviour
         }
 
         _isRolling = false;
-        yield return null;
     }
 
     // 상태 확인
