@@ -29,6 +29,6 @@ public class MenuManager : MonoBehaviour
 
         settingTabManager.ResetToDefaultTab();
     }
-
-
+    
+    //변경했음
 }
